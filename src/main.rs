@@ -1,6 +1,7 @@
 use std::io;
 
 use chrono::NaiveDate;
+use clap::Parser;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -17,8 +18,20 @@ struct Turnover {
 	value: f64,
 }
 
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+struct Cli {
+	/// .csv file containing all turnovers of the first account
+	file1: std::path::PathBuf,
+	/// .csv file containing all turnovers of the second account
+	file2: std::path::PathBuf,
+}
+
 fn main() {
-	// TODO: Format csv file
+	let cli = Cli::parse();
+
+	// TODO: Read both files and handle errors
+	// TODO: Preformat csv file
     // Create a CSV parser that reads data from stdin.
     let mut reader = csv::ReaderBuilder::new()
 		.has_headers(false)

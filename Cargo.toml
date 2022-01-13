@@ -2,10 +2,13 @@
 name = "csv-spending-calculator"
 version = "0.1.0"
 edition = "2021"
+authors = ["Julian Vesper <jvesper95@gmail.com>"]
+description = "A minimal CLI tool to filter and diff turnovers of two different accounts"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "3.0", features = ["derive"] }
 csv = "1.1"
 serde = { version = "1", features = ["derive"] }
