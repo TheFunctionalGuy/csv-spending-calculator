@@ -1,16 +1,19 @@
 use std::io;
 
-use serde::{de, Deserialize, Deserializer};
+use chrono::NaiveDate;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 struct Turnover {
-	// TODO: Convert to dates
-	day: String,
-	day_2: String,
+	#[serde(with = "custom_date_format")]
+	account_day: NaiveDate,
+	#[serde(with = "custom_date_format")]
+	value_date: NaiveDate,
+	// TODO: Convert to custom struct
 	operation: String,
 	// TODO: Convert to custom struct
 	description: String,
-	#[serde(deserialize_with ="deserialize_comma_float")]
+	#[serde(with ="custom_float_format")]
 	value: f64,
 }
 
@@ -30,14 +33,36 @@ fn main() {
 	dbg!(turnovers);
 }
 
-// Custom deserializer for floats in European float format (e.g.: 24.016,56)
-fn deserialize_comma_float<'de, D>(deserializer: D) -> Result<f64, D::Error> where D: Deserializer<'de> {
-	let buf = String::deserialize(deserializer)?;
+// Module for deserialization of custom day format (e.g. 24.12.2004)
+mod custom_date_format {
+    use chrono::NaiveDate;
+    use serde::{Deserializer, Deserialize};
 
-	// Remove dots and replace commas with dots
-	buf
-		.replace('.', "")
-		.replace(',', ".")
-		.parse()
-		.map_err(de::Error::custom)
+	// Custom date format
+	const FORMAT: &'static str = "%d.%m.%Y";
+
+	pub fn deserialize<'de, D>(deserializer: D) -> Result<NaiveDate, D::Error>
+    where D: Deserializer<'de> {
+        let s = String::deserialize(deserializer)?;
+
+		// Apply custom date format
+		NaiveDate::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+    }
+}
+
+// Module for deserialization of custom (European) float format (e.g.: 24.016,56)
+mod custom_float_format {
+	use serde::{Deserializer, Deserialize};
+
+	pub fn deserialize<'de, D>(deserializer: D) -> Result<f64, D::Error>
+	where D: Deserializer<'de> {
+		let s = String::deserialize(deserializer)?;
+
+		// Remove dots and replace commas with dots
+		s
+			.replace('.', "")
+			.replace(',', ".")
+			.parse()
+			.map_err(serde::de::Error::custom)
+	}
 }
