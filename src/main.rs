@@ -1,5 +1,6 @@
-use std::io;
+use std::{io::BufReader, fs::File};
 
+use anyhow::Context;
 use chrono::NaiveDate;
 use clap::Parser;
 use serde::Deserialize;
@@ -27,23 +28,34 @@ struct Cli {
 	file2: std::path::PathBuf,
 }
 
-fn main() {
-	let cli = Cli::parse();
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+	let args = Cli::parse();
 
-	// TODO: Read both files and handle errors
+	// Read both files and handle errors
+	let first_account_file = File::open(&args.file1)
+		.with_context(|| format!("could not read file {:?}", &args.file1))?;
+	let first_account_reader = BufReader::new(first_account_file);
+
+	let second_account_file = File::open(&args.file2)
+		.with_context(|| format!("could not read file {:?}", &args.file2))?;
+	let second_account_reader = BufReader::new(second_account_file);
+
+	// TODO: Convert file from ANSI to UTF-8 encoding
 	// TODO: Preformat csv file
     // Create a CSV parser that reads data from stdin.
     let mut reader = csv::ReaderBuilder::new()
 		.has_headers(false)
 		.delimiter(b';')
-		.from_reader(io::stdin());
+		.from_reader(first_account_reader);
 
 	// Get all turnovers
-	let turnovers: Vec<Turnover> = reader.deserialize()
+	let first_account_turnovers: Vec<Turnover> = reader.deserialize()
 		.map(|t| t.unwrap())
 		.collect();
 
-	dbg!(turnovers);
+	dbg!(first_account_turnovers);
+
+	Ok(())
 }
 
 // Module for deserialization of custom day format (e.g. 24.12.2004)
