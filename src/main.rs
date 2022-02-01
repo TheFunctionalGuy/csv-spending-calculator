@@ -1,9 +1,15 @@
+#[cfg(feature = "crossterm")]
+mod crossterm;
+
 use std::{io::BufReader, fs::File};
 
 use anyhow::Context;
-use chrono::NaiveDate;
+use chrono::{NaiveDate};
 use clap::Parser;
 use serde::Deserialize;
+
+#[cfg(feature = "crossterm")]
+use crate::crossterm::run;
 
 #[derive(Debug, Deserialize)]
 struct Turnover {
@@ -29,19 +35,48 @@ struct Cli {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+	// === Parameter Handling ===
 	let args = Cli::parse();
-
+	
 	// Read both files and handle errors
 	let first_account_file = File::open(&args.file1)
-		.with_context(|| format!("could not read file {:?}", &args.file1))?;
+	.with_context(|| format!("could not read file {:?}", &args.file1))?;
 	let first_account_reader = BufReader::new(first_account_file);
-
+	
 	let second_account_file = File::open(&args.file2)
-		.with_context(|| format!("could not read file {:?}", &args.file2))?;
+	.with_context(|| format!("could not read file {:?}", &args.file2))?;
 	let second_account_reader = BufReader::new(second_account_file);
-
+	
 	// TODO: Convert file from ANSI to UTF-8 encoding
 	// TODO: Preformat csv file
+	// TODO: Add (f)ilter
+	// TODO: Add (a)nalyze functionality
+
+	run()?;
+
+	// let (tx, rx) = mpsc::channel();
+	// let tick_rate = Duration::from_millis(200);
+	// thread::spawn(move || {
+    //     let mut last_tick = Instant::now();
+    //     loop {
+    //         let timeout = tick_rate
+    //             .checked_sub(last_tick.elapsed())
+    //             .unwrap_or_else(|| Duration::from_secs(0));
+
+    //         if event::poll(timeout).expect("poll works") {
+    //             if let CEvent::Key(key) = event::read().expect("can read events") {
+    //                 tx.send(Event::Input(key)).expect("can send events");
+    //             }
+    //         }
+
+    //         if last_tick.elapsed() >= tick_rate {
+    //             if let Ok(_) = tx.send(Event::Tick) {
+    //                 last_tick = Instant::now();
+    //             }
+    //         }
+    //     }
+    // });
+
     // Create a CSV parser that reads data from stdin.
     let mut reader = csv::ReaderBuilder::new()
 		.has_headers(false)
@@ -52,8 +87,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 	let first_account_turnovers: Vec<Turnover> = reader.deserialize()
 		.map(|t| t.unwrap())
 		.collect();
+	
+	let second_account_turnovers: Vec<Turnover> = reader.deserialize()
+		.map(|t| t.unwrap())
+		.collect();
 
-	dbg!(first_account_turnovers);
+	//dbg!(first_account_turnovers);
+	//dbg!(second_account_turnovers);
 
 	Ok(())
 }
