@@ -11,5 +11,7 @@ chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "3.1", features = ["derive"] }
 crossterm = { version = "0.23" }
 csv = "1.1"
+encoding_rs = "0.8"
+encoding_rs_io = "0.1"
 serde = { version = "1", features = ["derive"] }
 tui = { version = "0.18", features = ["crossterm"] }
